@@ -1,0 +1,11 @@
+---
+- name: Install haproxy
+  apt: name=haproxy
+
+- name: Enable haproxy to be started by init script
+  command: sed -i "s/ENABLED=0/ENABLED=1/" /etc/default/haproxy
+
+- name: Copy haproxy.cfg template
+  template: src=haproxy.cfg.j2 dest=/etc/haproxy/haproxy.cfg mode=0644
+  notify: restart haproxy
+  when: mysql_instances is defined
