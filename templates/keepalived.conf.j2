@@ -1,0 +1,19 @@
+vrrp_script chk_haproxy {
+    script "pidof haproxy"
+    interval 2
+}
+
+vrrp_instance VI {
+    state {{ keepalived.role }}
+    interface {{ keepalived.interface }}
+    virtual_router_id {{ keepalived.virtual_router_id }}
+    priority {{ keepalived.priority }}
+
+    virtual_ipaddress {
+        {{ virtual_ip }}
+    }
+
+    track_script {
+        chk_haproxy
+    }
+}

@@ -9,3 +9,39 @@
   template: src=haproxy.cfg.j2 dest=/etc/haproxy/haproxy.cfg mode=0644
   notify: restart haproxy
   when: mysql_instances is defined
+
+- name: Install some packages for building keepalived
+  apt: name={{ item }}
+  with_items:
+    - build-essential
+    - libssl-dev
+
+- name: Download and extract keepalived
+  unarchive:
+    remote_src: yes
+    src: http://www.keepalived.org/software/keepalived-1.3.4.tar.gz
+    dest: /tmp
+
+- name: Build and install keepalived
+  shell: |
+    ./configure
+    make
+    make install
+  args:
+    chdir: /tmp/keepalived-1.3.4
+
+- name: Copy keepalived upstart script
+  copy:
+    src: keepalived_init
+    dest: /etc/init/keepalived.conf
+
+- name: Create keepalived directory
+  file: path=/etc/keepalived state=directory
+
+- name: Copy keepalived.conf
+  template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    backup: yes
+  when: keepalived is defined and virtual_ip is defined
+  notify: restart keepalived
